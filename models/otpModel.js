@@ -5,12 +5,13 @@ const otpSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "User"
     },
-    createdAt: {
-        type: Date,
-        default: Date.now()
-    },
     otp: {
         type: Number
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now(),
+        expires: 5 * 60
     }
 })
 
