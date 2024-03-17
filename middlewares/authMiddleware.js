@@ -5,7 +5,7 @@ require('dotenv').config();
 // authenticate the token
 exports.auth = async (req, res, next) => {
     try {
-        const token = req.body.token || req.cookies.token || req.header("Authorization").replace("Bearer ", "");
+        const token = req.body.token || req.cookies.token //|| req.header("Authorization").replace("Bearer ", "");
         console.log("TOKEN: ", token)
         if (!token) {
             return res.status(404).json({
@@ -40,7 +40,7 @@ exports.auth = async (req, res, next) => {
 
 //? Authorization
 // isStudent
-exports.isStudent = async (req, res) => {
+exports.isStudent = async (req, res, next) => {
     try {
         if (req.user.accountType !== 'Student') {
             return res.status(400).json({
@@ -48,12 +48,12 @@ exports.isStudent = async (req, res) => {
                 message: 'Only students are allowed'
             })
         }
-
+        next();
         //* Authenticated as a 'Student'
-        res.status(200).json({
-            status: 'success',
-            message: 'Welcome to the Students dashboard'
-        })
+        // res.status(200).json({
+        //     status: 'success',
+        //     message: 'Welcome to the Students dashboard'
+        // })
     }
     catch (err) {
         res.status(500).json({
@@ -65,7 +65,7 @@ exports.isStudent = async (req, res) => {
 }
 
 // isInstructor
-exports.isInstructor = async (req, res) => {
+exports.isInstructor = async (req, res, next) => {
     try {
         if (req.user.accountType !== 'Instructor') {
             return res.status(400).json({
@@ -73,12 +73,12 @@ exports.isInstructor = async (req, res) => {
                 message: 'Only Instructor\'s are allowed'
             })
         }
-
+        next();
         //* Authenticated as a 'Student'
-        res.status(200).json({
-            status: 'success',
-            message: 'Welcome to the Instructor\'s dashboard'
-        })
+        // res.status(200).json({
+        //     status: 'success',
+        //     message: 'Welcome to the Instructor\'s dashboard'
+        // })
     }
     catch (err) {
         res.status(500).json({
@@ -91,7 +91,7 @@ exports.isInstructor = async (req, res) => {
 
 
 // isAdmin
-exports.isAdmin = async (req, res) => {
+exports.isAdmin = async (req, res, next) => {
     try {
         if (req.user.accountType !== 'Admin') {
             return res.status(400).json({
@@ -100,11 +100,13 @@ exports.isAdmin = async (req, res) => {
             })
         }
 
+        next();
+
         //* Authenticated as a 'Student'
-        res.status(200).json({
-            status: 'success',
-            message: 'Welcome to the Admin\'s dashboard'
-        })
+        // res.status(200).json({
+        //     status: 'success',
+        //     message: 'Welcome to the Admin\'s dashboard'
+        // })
     }
     catch (err) {
         res.status(500).json({

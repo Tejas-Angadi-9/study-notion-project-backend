@@ -16,6 +16,12 @@ const courseSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    price: {
+        type: Number,
+    },
+    thumbnail: {
+        type: String,
+    },
     courseContent: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "Section"
@@ -24,12 +30,6 @@ const courseSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "RatingAndReviews"
     }],
-    price: {
-        type: Number,
-    },
-    thumbnail: {
-        type: String,
-    },
     tags: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "Tag"
