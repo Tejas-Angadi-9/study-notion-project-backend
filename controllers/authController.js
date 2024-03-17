@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken')
 const userModel = require('../models/userModel');
 const otpModel = require('../models/otpModel')
 const profileModel = require('../models/profileModel')
+const { mailSender } = require('../utils/mailSender')
 
 require('dotenv').config();
 
@@ -169,7 +170,7 @@ exports.login = async (req, res) => {
         }
 
         // Check if the user is already registered or not
-        const exisitingUser = await userModel.findOne({ email });
+        const exisitingUser = await userModel.findOne({ email }).populate("additionalDetails").exec();
         if (!exisitingUser) {
             return res.status(404).json({
                 status: 'fail',
@@ -188,28 +189,21 @@ exports.login = async (req, res) => {
 
         // Create a token
         const payload = {
-            _id: exisitingUser._id,
-            firstName: exisitingUser.firstName,
-            lastName: exisitingUser.lastName,
             email: exisitingUser.email,
-            password: exisitingUser.password,
-            image: exisitingUser.image,
-            accountType: exisitingUser.acountType,
-            additionalDetails: exisitingUser.additionalDetails,
-            courses: exisitingUser.courses,
-            courseProgress: exisitingUser.courseProgress
+            id: exisitingUser._id,
+            accountType: exisitingUser.acountType
         }
 
         let token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '2h' })
+        exisitingUser.token = token;
+        exisitingUser.password = undefined
+        console.log("TOKEN: ", token);
         if (!token) {
             return res.status(404).json({
                 status: 'fail',
                 message: 'Token not found'
             })
         }
-        exisitingUser.token = token;
-        exisitingUser.password = undefined
-        console.log("TOKEN: ", token);
 
         //* Sending the cookie back to the client
         const options = {
@@ -218,8 +212,9 @@ exports.login = async (req, res) => {
         }
         res.cookie("token", token, options).status(200).json({
             status: 'success',
-            message: 'Logged In successfully!',
+            token,
             exisitingUser,
+            message: 'Logged In successfully!',
         })
     }
     catch (err) {
@@ -232,4 +227,83 @@ exports.login = async (req, res) => {
 }
 
 // ChangePassword
+exports.changePassword = async (req, res) => {
+    try {
+        //* Fetch the data from the req.body
+        const { email, oldPassword, newPassword, confirmPassowrd } = req.body;
+
+        //* Validate the entered details
+        if (!email || !oldPassword || !newPassword || !confirmPassowrd) {
+            return res.status(400).json({
+                status: 'fail',
+                message: 'Enter all the details'
+            })
+        }
+
+        //* Check if the new entered password and confirmPassword are same or not
+        if (newPassword !== confirmPassowrd) {
+            return res.status(404).json({
+                status: 'fail',
+                message: 'New password and confirm password should be same'
+            })
+        }
+
+        //* Check if the user exists or not
+        const exisitingUser = await userModel.findOne({ email: email })
+            .populate("additionalDetails")
+            // .populate("course")
+            // .populate("courseProgress")
+            .exec();
+
+        //* IF user is not registered
+        if (!exisitingUser) {
+            return res.status(404).json({
+                status: 'fail',
+                message: "User doesn\'t exist"
+            })
+        }
+
+        //* Check if the old password matches or not
+        const passwordRes = await bcrypt.compare(oldPassword, exisitingUser.password)
+        if (!passwordRes) {
+            return res.status(404).json({
+                status: 'fail',
+                message: 'Old Password doesn\'t match'
+            })
+        }
+
+        // * Hash the new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        //* Now update the DB with the new password
+        const newData = await userModel.findOneAndUpdate(
+            { email: email },
+            { password: hashedPassword },
+            { new: true }
+        )
+            .populate("additionalDetails")
+            .exec();
+
+        //* Send Mail to user about the password is updated successfully!
+        const body = `<div>
+            <h1> Hi ${exisitingUser.firstName} ${exisitingUser.lastName} 👋 </h1>
+            <h2> Password Updated Successfully! </h2>
+            <p> If not you. Please report</p>
+        </div>`
+        await mailSender(exisitingUser.email, "Password updated successfully!", body)
+        console.log("Mail sent successully!");
+        res.status(201).json({
+            status: 'success',
+            message: 'Password updated successfully',
+            newData
+        })
+    }
+    catch (err) {
+        res.status(500).json({
+            status: 'fail',
+            data: 'Failed to reset the password',
+            message: err.message
+        })
+    }
+}
 
