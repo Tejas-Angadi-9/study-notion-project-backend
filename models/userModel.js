@@ -21,11 +21,11 @@ const userSchema = new mongoose.Schema({
         required: true,
         trim: true
     },
-    confirmPassowrd: {
-        type: String,
-        required: true,
-        trim: true
-    },
+    // confirmPassowrd: {
+    //     type: String,
+    //     required: true,
+    //     trim: true
+    // },
     image: {
         type: String,
     },
@@ -44,7 +44,11 @@ const userSchema = new mongoose.Schema({
     courseProgress: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "courseProgress"
-    }]
+    }],
+    token: {
+        type: String,
+        default: undefined
+    }
 })
 
 module.exports = mongoose.model('User', userSchema);

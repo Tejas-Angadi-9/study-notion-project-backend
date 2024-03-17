@@ -1,8 +1,10 @@
 const express = require('express');
 const app = express();
+const cookieParser = require('cookie-parser')
 const morgan = require('morgan');
 const { dbConnect } = require('./config/database');
 app.use(express.json());
+app.use(cookieParser())
 app.use(morgan('dev'));
 
 require('dotenv').config();
@@ -19,3 +21,7 @@ app.get('/', (req, res) => {
 
 //* Connecting to DB
 dbConnect();
+
+//* Importing the routes and mount on the common route
+const userRoute = require('./routes/userRoute');
+app.use('/api/v1', userRoute);
