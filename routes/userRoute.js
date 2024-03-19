@@ -7,6 +7,7 @@ const { resetPasswordToken, resetPassword } = require('../controllers/resetPassw
 const { auth, isStudent, isInstructor, isAdmin } = require('../middlewares/authMiddleware')
 const { createTag, getAllTags, deleteTag, updateTag } = require('../controllers/tagController')
 const { createCourse, getCourses } = require('../controllers/courseController')
+const { createSection, getSection, updateSection, deleteSection } = require('../controllers/sectionController')
 
 //* ---------------------------------- AUTH SECTION -------------------------------------------
 router.post('/signup', signup)
@@ -31,5 +32,11 @@ router.delete('/tags/:id', auth, isAdmin, deleteTag)
 //* -------------------------------- COURSES SECTION ------------------------------------------
 router.get('/courses', auth, isInstructor, getCourses)
 router.post('/courses', auth, isInstructor, createCourse)
+
+//* -------------------------------- SECTION SECTION ------------------------------------------
+router.post('/courses/:id/section', auth, isInstructor, createSection)
+router.get('/courses/:id/section', auth, isInstructor, getSection)
+router.patch('/courses/:courseId/section/:sectionId', auth, isInstructor, updateSection)
+router.delete('/courses/:courseId/section/:sectionId', auth, isInstructor, deleteSection)
 
 module.exports = router;
