@@ -90,3 +90,24 @@ exports.deleteAccount = async (req, res) => {
         })
     }
 }
+
+//* Get all the user accounts
+exports.getUser = async (req, res) => {
+    try {
+        const id = req.user.id;
+
+        const userData = await userModel.findById(id, { password: false, token_link: false, resetPasswordExpires: false, __v: false }).populate('additionalDetails').exec();
+
+        res.status(200).json({
+            status: 'success',
+            user: userData
+        })
+    }
+    catch (err) {
+        res.status(500).json({
+            status: 'fail',
+            data: 'Failed to get the user details',
+            message: err.message
+        })
+    }
+}

@@ -6,6 +6,7 @@ const userModel = require('../models/userModel');
 const otpModel = require('../models/otpModel')
 const profileModel = require('../models/profileModel')
 const { mailSender } = require('../utils/mailSender')
+const { passwordUpdated } = require('../mail/templates/passwordUpdate')
 
 require('dotenv').config();
 
@@ -13,11 +14,14 @@ require('dotenv').config();
 exports.sendOTP = async (req, res) => {
     try {
         //* Fetch the email from req.body
-        const { email } = req.body;
+        const email = req.body.email;
+
+        if (!email) {
+            return res.status(400).send('Enter the email')
+        }
 
         //* Check if the user already exists
         const exisitingUser = await userModel.findOne({ email });
-
         //* If yes, then return
         if (exisitingUser) {
             return res.status(409).json({
@@ -46,7 +50,7 @@ exports.sendOTP = async (req, res) => {
         }
 
         //* Store the OTP in the DB
-        const storingOTP = await otpModel.create({ email: email, otp: newOTP });
+        const storingOTP = await otpModel.create({ email, otp: newOTP });
 
         console.log("OTP Stored successfully! ", storingOTP);
 
@@ -294,11 +298,13 @@ exports.changePassword = async (req, res) => {
             .exec();
 
         //* Send Mail to user about the password is updated successfully!
-        const body = `<div>
-            <h1> Hi ${exisitingUser.firstName} ${exisitingUser.lastName} 👋 </h1>
-            <h2> Password Updated Successfully! </h2>
-            <p> If not you. Please report</p>
-        </div>`
+        // const body = `<div>
+        //     <h1> Hi ${exisitingUser.firstName} ${exisitingUser.lastName} 👋 </h1>
+        //     <h2> Password Updated Successfully! </h2>
+        //     <p> If not you. Please report</p>
+        // </div>`
+
+        const body = passwordUpdated(exisitingUser.email, exisitingUser.firstName + " " + exisitingUser.lastName)
         await mailSender(exisitingUser.email, "Password updated successfully!", body)
         console.log("Mail sent successully!");
         res.status(201).json({

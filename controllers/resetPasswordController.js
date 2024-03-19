@@ -109,12 +109,7 @@ exports.resetPassword = async (req, res) => {
                 .populate('additionalDetails').exec()
 
             //* Send Mail to user about the password is updated successfully!
-            const body =
-                `<div>
-                    <h1> Hi ${user.firstName} ${user.lastName} 👋 </h1>
-                    <h2> Password Updated Successfully! </h2>
-                    <p> If not you. Please report</p>
-                </div>`
+            const body = passwordUpdated(exisitingUser.email, exisitingUser.firstName + " " + exisitingUser.lastName)
             await mailSender(user.email, "Password updated successfully!", body);
             console.log("Mail sent successully!");
             return res.status(200).json({

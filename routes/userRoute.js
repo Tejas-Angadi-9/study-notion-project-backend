@@ -9,7 +9,7 @@ const { createTag, getAllTags, deleteTag, updateTag } = require('../controllers/
 const { createCourse, getCourses } = require('../controllers/courseController')
 const { createSection, getSection, updateSection, deleteSection } = require('../controllers/sectionController')
 const { createSubSection, getSubSection, updateSubSection, deleteSubSection } = require('../controllers/subsectionController')
-const { updateProfile, deleteAccount } = require('../controllers/profileController')
+const { updateProfile, deleteAccount, getUser } = require('../controllers/profileController')
 
 //* ---------------------------------- AUTH SECTION -------------------------------------------
 router.post('/signup', signup)
@@ -20,9 +20,9 @@ router.post('/resetPasswordToken', resetPasswordToken)
 router.patch('/resetPassword', resetPassword)
 
 //* -------------------------- Authorization middlewares --------------------------------------
-router.get('/student', auth, isStudent)
-router.get('/instructor', auth, isInstructor)
-router.get('/admin', auth, isAdmin)
+router.get('/student', auth, isStudent, (req, res) => res.send('Hello Student'))
+router.get('/instructor', auth, isInstructor, (req, res) => res.send('Hello Instructor'))
+router.get('/admin', auth, isAdmin, (req, res) => res.send('Hello Admin'))
 
 
 //* ---------------------------------- TAGS SECTION -------------------------------------------
@@ -48,8 +48,9 @@ router.patch('/courses/section/subsection', auth, isInstructor, updateSubSection
 router.delete('/courses/section/subsection', auth, isInstructor, deleteSubSection)
 
 //* -------------------------------- PROFILE SECTION ------------------------------------------
-router.patch('/users/profile', auth, isInstructor, updateProfile)
-router.delete('/users/profile', auth, isInstructor, deleteAccount)
+router.patch('/user/profile', auth, isInstructor || isAdmin || isStudent, updateProfile)
+router.delete('/user/profile', auth, isInstructor || isAdmin || isStudent, deleteAccount)
+router.get('/user', auth, isInstructor || isAdmin || isStudent, getUser)
 //TODO: Get all users details
 
 module.exports = router;
