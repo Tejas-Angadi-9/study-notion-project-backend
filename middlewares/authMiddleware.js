@@ -10,7 +10,7 @@ exports.auth = async (req, res, next) => {
         if (!token) {
             return res.status(404).json({
                 status: 'fail',
-                message: 'Token is missing'
+                message: 'Token has expired. Please Login again'
             })
         }
 

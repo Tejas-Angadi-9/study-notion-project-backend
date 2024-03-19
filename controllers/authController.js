@@ -170,7 +170,15 @@ exports.login = async (req, res) => {
         }
 
         // Check if the user is already registered or not
-        const exisitingUser = await userModel.findOne({ email }).populate("additionalDetails").exec();
+        const exisitingUser = await userModel.findOne({ email })
+            .populate({ path: "additionalDetails" })
+            .populate({
+                path: 'courses',
+                populate: {
+                    path: 'tag'
+                }
+            })
+            .exec();
         if (!exisitingUser) {
             return res.status(404).json({
                 status: 'fail',
@@ -189,8 +197,9 @@ exports.login = async (req, res) => {
 
         // Create a token
         const payload = {
-            email: exisitingUser.email,
             id: exisitingUser._id,
+            name: exisitingUser.firstName + " " + exisitingUser.lastName,
+            email: exisitingUser.email,
             accountType: exisitingUser.acountType
         }
 

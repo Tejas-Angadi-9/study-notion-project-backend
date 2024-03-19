@@ -23,7 +23,7 @@ const userSchema = new mongoose.Schema({
     },
     confirmPassowrd: {
         type: String,
-        required: true,
+        // required: true,
         default: undefined
     },
     image: {

@@ -30,14 +30,13 @@ const courseSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "RatingAndReviews"
     }],
-    tags: [{
+    tag: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "Tag"
     }],
     studentEnrolled: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
-        required: true
     },
 })
 

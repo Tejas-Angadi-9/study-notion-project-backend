@@ -2,11 +2,16 @@ const express = require('express');
 const app = express();
 const cookieParser = require('cookie-parser')
 const morgan = require('morgan');
-const { dbConnect } = require('./config/database');
+const fileUpload = require('express-fileupload')
 app.use(express.json());
 app.use(cookieParser())
 app.use(morgan('dev'));
+app.use(fileUpload({
+    useTempFiles: true,
+    tempFileDir: '/tmp/'
+}));
 
+const { dbConnect } = require('./config/database');
 require('dotenv').config();
 
 const PORT = process.env.PORT || 4001;
