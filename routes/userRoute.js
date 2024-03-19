@@ -8,6 +8,8 @@ const { auth, isStudent, isInstructor, isAdmin } = require('../middlewares/authM
 const { createTag, getAllTags, deleteTag, updateTag } = require('../controllers/tagController')
 const { createCourse, getCourses } = require('../controllers/courseController')
 const { createSection, getSection, updateSection, deleteSection } = require('../controllers/sectionController')
+const { createSubSection, getSubSection, updateSubSection, deleteSubSection } = require('../controllers/subsectionController')
+const { updateProfile, deleteAccount } = require('../controllers/profileController')
 
 //* ---------------------------------- AUTH SECTION -------------------------------------------
 router.post('/signup', signup)
@@ -39,4 +41,18 @@ router.get('/courses/section', auth, isInstructor, getSection)
 router.patch('/courses/section', auth, isInstructor, updateSection)
 router.delete('/courses/section', auth, isInstructor, deleteSection)
 
+//* -------------------------------- SUB-SECTION SECTION --------------------------------------
+router.post('/courses/section/subsection', auth, isInstructor, createSubSection)
+router.get('/courses/section/subsection', auth, isInstructor, getSubSection)
+router.patch('/courses/section/subsection', auth, isInstructor, updateSubSection)
+router.delete('/courses/section/subsection', auth, isInstructor, deleteSubSection)
+
+//* -------------------------------- PROFILE SECTION ------------------------------------------
+router.patch('/users/profile', auth, isInstructor, updateProfile)
+router.delete('/users/profile', auth, isInstructor, deleteAccount)
+//TODO: Get all users details
+
 module.exports = router;
+
+
+//! CRONJOB -> Check this
