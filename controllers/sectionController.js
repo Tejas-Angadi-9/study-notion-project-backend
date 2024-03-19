@@ -4,10 +4,9 @@ const courseModel = require('../models/courseModel');
 exports.createSection = async (req, res) => {
     try {
         //* Fetch the data
-        const sectionName = req.body.sectionName;
-        const courseId = req.params.id;
+        const { sectionName, courseId } = req.body;
         //* Validate the details
-        if (!sectionName) {
+        if (!sectionName || !courseId) {
             return res.status(400).json({
                 status: 'fail',
                 message: 'Fill all the fields'
@@ -16,7 +15,7 @@ exports.createSection = async (req, res) => {
 
         //* Check whether the course exists or not 
         const exisitingCourse = await courseModel.findById(courseId);
-        if(!exisitingCourse){
+        if (!exisitingCourse) {
             return res.status(404).json({
                 status: 'fail',
                 message: 'Course not found!'
@@ -24,7 +23,7 @@ exports.createSection = async (req, res) => {
         }
 
         //* Store the entry in the db
-        const sectionData = await sectionModel.create({ sectionName: sectionName, subSection: null })
+        const sectionData = await sectionModel.create({ sectionName: sectionName })
 
         //* push the section id in the course content in courseModel
         const updatedCourse = await courseModel.findOneAndUpdate(
@@ -55,8 +54,8 @@ exports.createSection = async (req, res) => {
 //* Get all the section from a particular course
 exports.getSection = async (req, res) => {
     try {
-        //* get the course id from req.params.id
-        const courseId = req.params.id;
+        //* get the course id from req.body
+        const courseId = req.body.courseId;
         console.log("Course Id ", courseId)
         //* Check whether that course exisits or not
         const exisitingCourse = await courseModel.findById(courseId, { courseContent: true }).populate('courseContent').exec()
@@ -89,15 +88,13 @@ exports.getSection = async (req, res) => {
 exports.updateSection = async (req, res) => {
     try {
         //* Fetch the data to be updated and the ID of the course and the section from the req.params as courseId & sectionId respectively
-        const sectionName = req.body.sectionName;
-        const courseId = req.params.courseId;
-        const sectionId = req.params.sectionId;
+        const { sectionName, courseId, sectionId } = req.body;
 
         //* Validate these fetched data
-        if (!sectionName) {
+        if (!sectionName || !courseId || !sectionId) {
             return res.status(400).json({
                 status: 'fail',
-                message: "Enter the section name to be updated"
+                message: "Fill all the fields"
             })
         }
 
@@ -136,9 +133,8 @@ exports.updateSection = async (req, res) => {
 //* Delete the section from a particular course
 exports.deleteSection = async (req, res) => {
     try {
-        //* Get the courseID and the sectionID from the req.params
-        const courseId = req.params.courseId;
-        const sectionId = req.params.sectionId;
+        //* Get the courseID and the sectionID from the req.body
+        const { courseId, sectionId } = req.body;
 
         //* Check whether the section exists from that particular course or not
         const exisitingCourse = await courseModel.findOne({ _id: courseId, courseContent: sectionId });

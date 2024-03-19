@@ -34,9 +34,9 @@ router.get('/courses', auth, isInstructor, getCourses)
 router.post('/courses', auth, isInstructor, createCourse)
 
 //* -------------------------------- SECTION SECTION ------------------------------------------
-router.post('/courses/:id/section', auth, isInstructor, createSection)
-router.get('/courses/:id/section', auth, isInstructor, getSection)
-router.patch('/courses/:courseId/section/:sectionId', auth, isInstructor, updateSection)
-router.delete('/courses/:courseId/section/:sectionId', auth, isInstructor, deleteSection)
+router.post('/courses/section', auth, isInstructor, createSection)
+router.get('/courses/section', auth, isInstructor, getSection)
+router.patch('/courses/section', auth, isInstructor, updateSection)
+router.delete('/courses/section', auth, isInstructor, deleteSection)
 
 module.exports = router;
