@@ -104,7 +104,9 @@ exports.getCourses = async (req, res) => {
             .populate('instructor', {
                 firstName: true,
                 lastName: true
-            }).exec()
+            })
+            .populate('ratingAndReviews')
+            .exec()
         // .populate({
         //     path: 'tag',
         //     populate: {

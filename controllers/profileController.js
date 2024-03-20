@@ -1,6 +1,7 @@
 const profileModel = require('../models/profileModel')
 const userModel = require('../models/userModel')
 
+//* Update profile
 exports.updateProfile = async (req, res) => {
     try {
         //* Fetch the details
@@ -8,44 +9,24 @@ exports.updateProfile = async (req, res) => {
 
         const id = req.user.id;
         if (!id) {
-            return res.status(400).send("Some terms are missing")
+            return res.status(400).send("Id is missing")
         }
         //* Check whether this profilemodel exsits or not?
         //* Update the data in the profileModel
 
         const userDetails = await userModel.findById(id);
-        const profileId = userDetails.additionalDetails;
-        const profileDetails = await profileModel.findById(profileId)
+        const profileDetails = await profileModel.findByIdAndUpdate(userDetails.additionalDetails, {
+            gender: gender,
+            dob: dob,
+            about: about,
+            phoneno: phoneno,
+        }, { new: true })
 
-        // update the profile
-        profileDetails.dob = dob;
-        profileDetails.about = about;
-        profileDetails.gender = gender;
-        profileDetails.phoneno = phoneno;
+        console.log("Profile Details: ", profileDetails)
 
-        //This makes sure this data will be saved/changes applied
-        await profileDetails.save();
-        // const data = req.user.id;
-        // const user = await userModel.findById(data)
-        //     .populate('additionalDetails')
-        // .populate({
-        //     path: 'courses',
-        //     populate: {
-        //         path: 'courseContent',
-        //         populate: {
-        //             path: 'subSection'
-        //         }
-        //     },
-        //     populate: {
-        //         path: 'tag'
-        //     }
-        // })
-        // .exec();
-        console.log(userDetails)
         //* Send Response
         res.status(201).json({
             status: 'success',
-            userDetails
         })
     }
     catch (err) {
@@ -76,7 +57,7 @@ exports.deleteAccount = async (req, res) => {
         //* Delete the user
         await userModel.findByIdAndDelete(id);
 
-        //return res
+        //* return res
         res.status(204).json({
             status: 'success',
             message: 'User deleted successfully!'

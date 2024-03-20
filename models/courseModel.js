@@ -34,10 +34,10 @@ const courseSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Tag"
     }],
-    studentEnrolled: {
+    studentEnrolled: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
-    },
+    }],
 })
 
 module.exports = mongoose.model('Course', courseSchema);

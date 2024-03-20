@@ -10,6 +10,7 @@ const { createCourse, getCourses } = require('../controllers/courseController')
 const { createSection, getSection, updateSection, deleteSection } = require('../controllers/sectionController')
 const { createSubSection, getSubSection, updateSubSection, deleteSubSection } = require('../controllers/subsectionController')
 const { updateProfile, deleteAccount, getUser } = require('../controllers/profileController')
+const { createRatingAndReview, updateRatingAndReview, getAllRatings, deleteRatingAndReivew } = require('../controllers/ratingAndReviewController')
 
 //* ---------------------------------- AUTH SECTION -------------------------------------------
 router.post('/signup', signup)
@@ -48,12 +49,23 @@ router.patch('/courses/section/subsection', auth, isInstructor, updateSubSection
 router.delete('/courses/section/subsection', auth, isInstructor, deleteSubSection)
 
 //* -------------------------------- PROFILE SECTION ------------------------------------------
-router.patch('/user/profile', auth, isInstructor || isAdmin || isStudent, updateProfile)
-router.delete('/user/profile', auth, isInstructor || isAdmin || isStudent, deleteAccount)
-router.get('/user', auth, isInstructor || isAdmin || isStudent, getUser)
-//TODO: Get all users details
+
+router.patch('/user/profile', auth,
+    //* TO use or we use it like this
+    (req, res, next) => isInstructor(req, res, next) || isAdmin(req, res, next) || isStudent(req, res, next), updateProfile);
+
+router.delete('/user/profile', auth,
+    (req, res, next) => isInstructor(req, res, next) || isAdmin(req, res, next) || isStudent(req, res, next), deleteAccount);
+
+router.get('/user', auth,
+    (req, res, next) => isStudent(req, res, next) || isInstructor(req, res, next) || isAdmin(req, res, next), getUser);
+
+//* -------------------------------- RATING & REVIEWS SECTION ------------------------------------------
+router.post('/courses/rating', auth, isStudent, createRatingAndReview);
+router.patch('/courses/rating', auth, isStudent, updateRatingAndReview);
+router.get('/courses/rating', auth, isStudent, getAllRatings)
+router.delete('/courses/rating', auth, isStudent, deleteRatingAndReivew)
 
 module.exports = router;
-
 
 //! CRONJOB -> Check this
