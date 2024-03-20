@@ -90,6 +90,8 @@ exports.createCourse = async (req, res) => {
 }
 
 // Get all courses handle function
+
+//TODO: --------------------------------------- Change from all the courses to get a single course ---------------------------------
 exports.getCourses = async (req, res) => {
     try {
         console.log('REQ.USER ', req.user)
@@ -101,19 +103,29 @@ exports.getCourses = async (req, res) => {
             ratingAndReviews: true,
             studentEnrolled: true
         })
-            .populate('instructor', {
-                firstName: true,
-                lastName: true
+            .populate({
+                path: 'instructor',
+                populate: {
+                    path: 'additionalDetails'
+                }
             })
+            .populate('tag')
             .populate('ratingAndReviews')
+            .populate({
+                path: 'courseContent',
+                populate: {
+                    path: 'subSection'
+                }
+            })
             .exec()
-        // .populate({
-        //     path: 'tag',
-        //     populate: {
-        //         path: 'course',
-        //     }
-        // })
-        // .exec()
+
+        //* CourseDetails validation
+        // if (!courses) {
+        //     res.status(404).json({
+        //         status: 'fail',
+        //         message: `Could not find the course details with `,
+        //     })
+        // }
 
         //* Return response 
         res.status(200).json({
