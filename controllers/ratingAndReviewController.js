@@ -1,6 +1,6 @@
+const { default: mongoose } = require("mongoose");
 const courseModel = require("../models/courseModel");
 const ratingAndReviewsModel = require("../models/ratingAndReviewsModel");
-const userModel = require("../models/userModel");
 
 exports.createRatingAndReview = async (req, res) => {
     try {
@@ -17,6 +17,15 @@ exports.createRatingAndReview = async (req, res) => {
             })
         }
 
+        //* Check whether the user is enrolled or not
+        const courseDetails = await courseModel.findOne({_id: courseId, studentEnrolled: {$elemMatch: {$eq: userId}}});
+
+        if(!courseDetails){
+            return res.status(404).json({
+                status: 'fail',
+                message: 'Student is not enrolled in the course'
+            })
+        }
         //*Check whether the course is valid or exisiting or not
         const exisitingCourse = await courseModel.findById(courseId);
         if (!exisitingCourse) {
@@ -26,9 +35,19 @@ exports.createRatingAndReview = async (req, res) => {
             })
         }
 
+        //* Check if the user is already reviewed the course or not
+        const alreadyReviewed = await ratingAndReviewsModel.findOne({user: userId, course: courseId})
+        if(alreadyReviewed){
+            return res.status(403).json({
+                status: 'success',
+                message: 'Course is already reviewed'
+            })
+        }
+
         //* Create the entry in the db 
         const ratingData = await ratingAndReviewsModel.create({
             user: userId,
+            course: courseId,
             rating: rating,
             review: review
         })
@@ -90,8 +109,10 @@ exports.updateRatingAndReview = async (req, res) => {
     }
 }
 
-//* Get all the rating & Reviews
-exports.getAllRatings = async (req, res) => {
+//TODO: Write the controller to get the average of the ratings
+
+//* Get the rating & Reviews based on single course id
+exports.getRatingBasedonCourse = async (req, res) => {
     try {
         //* Get the courseId to fetch all the ratings 
         const courseId = req.body.courseId;
@@ -128,6 +149,36 @@ exports.getAllRatings = async (req, res) => {
         res.status(500).json({
             status: 'fail',
             data: 'Failed to get all the ratings and reviews',
+            message: err.message
+        })
+    }
+}
+
+//* Get all the ratings and reviews -> To show on the dashboard/main screen
+exports.getAllRatings = async(req, res) => {
+    try{
+        const ratings = await ratingAndReviewsModel.find()
+            .populate({
+                path: 'user',
+                select: 'firstName lastName'
+            })
+            .exec()
+        ;
+
+        if(!ratings){
+            return res.status(404).send('No ratings found!')
+        }
+
+        res.status(200).json({
+            status: 'success',
+            results: ratings.length,
+            ratings
+        })
+    }
+    catch(err){
+        res.status(500).json({
+            status: 'fail',
+            data: 'Failed to fetch all the ratings and reviews',
             message: err.message
         })
     }

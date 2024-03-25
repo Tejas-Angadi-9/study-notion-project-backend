@@ -90,11 +90,9 @@ exports.createCourse = async (req, res) => {
 }
 
 // Get all courses handle function
-
-//TODO: --------------------------------------- Change from all the courses to get a single course ---------------------------------
-exports.getCourses = async (req, res) => {
+exports.getAllCourses = async (req, res) => {
     try {
-        console.log('REQ.USER ', req.user)
+
         const courses = await courseModel.find({}, {
             courseName: true,
             price: true,
@@ -118,6 +116,13 @@ exports.getCourses = async (req, res) => {
                 }
             })
             .exec()
+        
+        if(!courses){
+            return res.status(404).json({
+                status: 'fail',
+                message: 'Course not found!'
+            })
+        }
 
         //* CourseDetails validation
         // if (!courses) {
@@ -132,6 +137,70 @@ exports.getCourses = async (req, res) => {
             status: 'success',
             results: courses.length,
             courses
+        })
+    }
+    catch (err) {
+        res.status(500).json({
+            status: 'fail',
+            data: 'Failed to get all the courses',
+            message: err.message,
+        })
+    }
+}
+
+// Get a single course handle function
+exports.getCourse = async (req, res) => {
+    try {
+        console.log('REQ.USER ', req.user)
+        const courseId = req.body.courseId;
+
+        if(!courseId){
+            return res.status(404).send("Course Id is missing!")
+        }
+        const course = await courseModel.findById(courseId, {
+            courseName: true,
+            price: true,
+            thumbnail: true,
+            instructor: true,
+            ratingAndReviews: true,
+            studentEnrolled: true
+        })
+            .populate({
+                path: 'instructor',
+                populate: {
+                    path: 'additionalDetails'
+                }
+            })
+            .populate('tag')
+            .populate('ratingAndReviews')
+            .populate({
+                path: 'courseContent',
+                populate: {
+                    path: 'subSection'
+                }
+            })
+            .exec()
+        
+        if(!course){
+            return res.status(404).json({
+                status: 'fail',
+                message: 'Course not found!'
+            })
+        }
+
+        //* CourseDetails validation
+        // if (!courses) {
+        //     res.status(404).json({
+        //         status: 'fail',
+        //         message: `Could not find the course details with `,
+        //     })
+        // }
+
+        //* Return response 
+        res.status(200).json({
+            status: 'success',
+            // results: course.length,
+            course
         })
     }
     catch (err) {

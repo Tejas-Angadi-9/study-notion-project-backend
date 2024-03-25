@@ -6,11 +6,11 @@ const { signup, sendOTP, login, changePassword } = require('../controllers/authC
 const { resetPasswordToken, resetPassword } = require('../controllers/resetPasswordController')
 const { auth, isStudent, isInstructor, isAdmin } = require('../middlewares/authMiddleware')
 const { createTag, getAllTags, deleteTag, updateTag } = require('../controllers/tagController')
-const { createCourse, getCourses } = require('../controllers/courseController')
+const { createCourse, getCourse, getAllCourses } = require('../controllers/courseController')
 const { createSection, getSection, updateSection, deleteSection } = require('../controllers/sectionController')
 const { createSubSection, getSubSection, updateSubSection, deleteSubSection } = require('../controllers/subsectionController')
 const { updateProfile, deleteAccount, getUser } = require('../controllers/profileController')
-const { createRatingAndReview, updateRatingAndReview, getAllRatings, deleteRatingAndReivew } = require('../controllers/ratingAndReviewController')
+const { createRatingAndReview, updateRatingAndReview, getRatingBasedonCourse, getAllRatings, deleteRatingAndReivew } = require('../controllers/ratingAndReviewController')
 
 //* ---------------------------------- AUTH SECTION -------------------------------------------
 router.post('/signup', signup)
@@ -33,7 +33,8 @@ router.patch('/tags/:id', auth, isAdmin, updateTag)
 router.delete('/tags/:id', auth, isAdmin, deleteTag)
 
 //* -------------------------------- COURSES SECTION ------------------------------------------
-router.get('/courses', auth, isInstructor, getCourses)
+router.get('/course', auth, isInstructor, getCourse)
+router.get('/courses', auth, isInstructor, getAllCourses)
 router.post('/courses', auth, isInstructor, createCourse)
 
 //* -------------------------------- SECTION SECTION ------------------------------------------
@@ -63,7 +64,8 @@ router.get('/user', auth,
 //* -------------------------------- RATING & REVIEWS SECTION ------------------------------------------
 router.post('/courses/rating', auth, isStudent, createRatingAndReview);
 router.patch('/courses/rating', auth, isStudent, updateRatingAndReview);
-router.get('/courses/rating', auth, isStudent, getAllRatings)
+router.get('/courses/rating', auth, isStudent, getRatingBasedonCourse)
+router.get('/courses/ratings', auth, isStudent, getAllRatings)
 router.delete('/courses/rating', auth, isStudent, deleteRatingAndReivew)
 
 module.exports = router;
