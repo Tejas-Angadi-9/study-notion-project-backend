@@ -51,7 +51,7 @@ exports.categoryPageDetails = async (req, res) => {
         const { categoryId } = req.body;
         //get courses for specified categoryId
         const selectedCategory = await Category.findById(categoryId)
-            .populate("courses")
+            .populate("course")
             .exec();
         //validation
         if (!selectedCategory) {
@@ -61,10 +61,10 @@ exports.categoryPageDetails = async (req, res) => {
             });
         }
         //get coursesfor different categories
-        const differentCategories = await Category.find({
+        const differentCategories = await Category.findOne({
             _id: { $ne: categoryId },
         })
-            .populate("courses")
+            .populate("course")
             .exec();
 
         //get top 10 selling courses

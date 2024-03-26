@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt')
 const userModel = require('../models/userModel');
-
+const { passwordUpdated } = require('../mail/templates/passwordUpdate')
 const { mailSender } = require('../utils/mailSender');
 
 // Reset Password Token
@@ -102,7 +102,7 @@ exports.resetPassword = async (req, res) => {
                 { token_link: token },
                 {
                     password: hashedPassword,
-                    // token_link: null
+                    token_link: null
                 },
                 { new: true }
             )

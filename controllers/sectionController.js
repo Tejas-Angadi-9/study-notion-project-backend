@@ -91,7 +91,7 @@ exports.updateSection = async (req, res) => {
         const { sectionName, courseId, sectionId } = req.body;
 
         //* Validate these fetched data
-        if (!sectionName || !courseId || !sectionId) {
+        if (!sectionName || !sectionId) {
             return res.status(400).json({
                 status: 'fail',
                 message: "Fill all the fields"
@@ -99,13 +99,13 @@ exports.updateSection = async (req, res) => {
         }
 
         //* Check whether the course exists or not
-        const exisitingCourse = await courseModel.findOne({ _id: courseId, courseContent: sectionId });
-        if (!exisitingCourse) {
-            return res.status(404).json({
-                status: 'fail',
-                message: "Invalid course/section"
-            })
-        }
+        // const exisitingCourse = await courseModel.findOne({ _id: courseId, courseContent: sectionId });
+        // if (!exisitingCourse) {
+        //     return res.status(404).json({
+        //         status: 'fail',
+        //         message: "Invalid course/section"
+        //     })
+        // }
 
         //* Update the section with the data to be updated and store in the DB
         const updatedSection = await sectionModel.findByIdAndUpdate(

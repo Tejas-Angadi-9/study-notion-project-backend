@@ -11,7 +11,8 @@ exports.createCourse = async (req, res) => {
     try {
         const userId = req.user.id;
         //* Fetch the data
-        const { courseName, description, WhatYouWillLearn, price, tag, category, status, instructions } = req.body;
+        var status = req.body.status;
+        const { courseName, description, WhatYouWillLearn, price, tag, category, instructions } = req.body;
 
         //* Get the thumbnail photo
         const thumbnail = req.files.thumbnailImage;
@@ -30,10 +31,9 @@ exports.createCourse = async (req, res) => {
         });
         //TODO: Verify that userId and instructorDetails._id are same or different? -> WE are getting the same user id and then checking where that user id as instructor id is same or not. Which is not required. As both the id's are same.
 
-        if (!status || status === undefined) {
+        if (!status) {
             status = "Draft";
         }
-        // console.log('Instructor Details: ', instructorDeatils)
 
         if (!instructorDeatils) {
             return res.status(404).json({
@@ -42,8 +42,8 @@ exports.createCourse = async (req, res) => {
             })
         }
 
-        //* Check given tag is valid or not
-        const categoryDetails = await categoryModel.findOne(category);
+        //* Check given category is valid or not
+        const categoryDetails = await categoryModel.findById(category);
         if (!categoryDetails) {
             return res.status(404).json({
                 status: 'fail',
@@ -64,9 +64,10 @@ exports.createCourse = async (req, res) => {
             category: categoryDetails._id,
             thumbnail: thumbnailImage.secure_url,
             status: status,
-            instrcutions: instrcutions
+            instructions: instructions
         })
 
+        console.log('newCourse: ', newCourse)
         //* Add the new course to the user schema of instructor
         const userData = await userModel.findByIdAndUpdate(
             { _id: instructorDeatils._id },
@@ -82,7 +83,7 @@ exports.createCourse = async (req, res) => {
         )
 
         //* Return response
-        res.status(201).json({
+        return res.status(201).json({
             status: 'success',
             userData,
             message: 'Created a new course'
@@ -102,17 +103,16 @@ exports.getAllCourses = async (req, res) => {
     try {
 
         const courses = await courseModel.find(
-            {},
-            {
-                courseName: true,
-                price: true,
-                thumbnail: true,
-                instructor: true,
-                ratingAndReviews: true,
-                studentEnrolled: true
-            })
+            {}
+        )
             .populate({
                 path: 'instructor',
+            })
+            .populate({
+                path: "courseContent",
+                populate: {
+                    path: 'subSection'
+                }
             })
             .exec()
 

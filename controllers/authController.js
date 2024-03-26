@@ -71,10 +71,10 @@ exports.sendOTP = async (req, res) => {
 // Signup
 exports.signup = async (req, res) => {
     try {
-        const { firstName, lastName, email, password, confirmPassowrd, phoneNumber, acountType, otp } = req.body;
+        const { firstName, lastName, email, password, confirmPassowrd, phoneNumber, accountType, otp } = req.body;
 
         //* validate all the data
-        if (!firstName || !lastName || !email || !password || !confirmPassowrd || !phoneNumber || !acountType || !otp) {
+        if (!firstName || !lastName || !email || !password || !confirmPassowrd || !phoneNumber || !accountType || !otp) {
             return res.status(400).json({
                 status: 'fail',
                 message: 'Fill all the fields'
@@ -102,13 +102,13 @@ exports.signup = async (req, res) => {
         const recentOTP = await otpModel.findOne({ email }).sort({ createdAt: -1 }).limit(1)
         console.log("recent OTP: ", recentOTP)
         // validate the OTP
-        if (recentOTP.length === 0) {
-            return res.status(400).json({
-                status: 'fail',
-                message: 'OTP not found'
-            })
-        }
-        else if (otp !== recentOTP.otp) {
+        // if (recentOTP.length === 0) {
+        //     return res.status(400).json({
+        //         status: 'fail',
+        //         message: 'OTP not found'
+        //     })
+        // }
+        if (otp !== recentOTP.otp) {
             // INVALID OTP
             return res.status(409).json({
                 status: 'fail',
@@ -139,7 +139,7 @@ exports.signup = async (req, res) => {
             lastName,
             email,
             password: hashedPassword,
-            acountType,
+            accountType: accountType,
             image: `https://api.dicebear.com/8.x/initials/svg?seed=${firstName}%20${lastName}`,
             additionalDetails: profileDetails
         })
@@ -183,6 +183,7 @@ exports.login = async (req, res) => {
                 }
             })
             .exec();
+        console.log("Account Type: ", exisitingUser.accountType)
         if (!exisitingUser) {
             return res.status(404).json({
                 status: 'fail',
@@ -204,7 +205,7 @@ exports.login = async (req, res) => {
             id: exisitingUser._id,
             name: exisitingUser.firstName + " " + exisitingUser.lastName,
             email: exisitingUser.email,
-            accountType: exisitingUser.acountType
+            accountType: exisitingUser.accountType
         }
 
         let token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '2h' })

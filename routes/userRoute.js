@@ -13,7 +13,7 @@ router.post('/login', login)
 router.post('/sendotp', sendOTP)
 router.patch('/changePasword', changePassword)
 router.post('/reset-password-token', resetPasswordToken)
-router.patch('/reset-password', resetPassword)
+router.post('/reset-password', resetPassword)
 
 //* -------------------------- Authorization middlewares --------------------------------------
 router.get('/student', auth, isStudent, (req, res) => res.send('Hello Student'))

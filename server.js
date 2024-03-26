@@ -35,7 +35,10 @@ app.listen(PORT, () => {
 })
 
 app.get('/', (req, res) => {
-    res.send(`<h1> Study Notion Coming soon! </h1>`)
+    res.json({
+        status: 'success',
+        message: `Server is running successfully!`
+    })
 })
 
 //* Connecting to DB

@@ -118,7 +118,7 @@ exports.updateDisplayPicture = async (req, res) => {
         console.log("Display Pic: ", image)
 
         //* Update the profile
-        const updatedProfile = await profileModel.findByIdAndUpdate(
+        const updatedProfile = await userModel.findByIdAndUpdate(
             { _id: userId },
             { image: image.secure_url },
             { new: true }
@@ -127,7 +127,7 @@ exports.updateDisplayPicture = async (req, res) => {
         return res.status(201).json({
             status: 'success',
             message: 'Image updated successfully!',
-            profile: updateProfile,
+            profile: updatedProfile,
         })
     }
     catch (err) {
