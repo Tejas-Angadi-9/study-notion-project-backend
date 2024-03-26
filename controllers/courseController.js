@@ -1,6 +1,6 @@
 const userModel = require('../models/userModel');
 const courseModel = require('../models/courseModel');
-const tagModel = require('../models/tagsModel');
+const categoryModel = require('../models/categoryModel');
 
 // import the image uploader function
 const { uploadImageToCloudinary } = require('../utils/imageUploader')
@@ -9,13 +9,15 @@ require('dotenv').config();
 // CreateCOurse handler function
 exports.createCourse = async (req, res) => {
     try {
+        const userId = req.user.id;
         //* Fetch the data
-        const { courseName, description, WhatYouWillLearn, price, tag } = req.body;
+        const { courseName, description, WhatYouWillLearn, price, tag, category, status, instructions } = req.body;
 
         //* Get the thumbnail photo
-        const thumbnail = req.files.thumbnail;
+        const thumbnail = req.files.thumbnailImage;
+
         //* validation
-        if (!courseName || !description || !WhatYouWillLearn || !price || !tag || !thumbnail) {
+        if (!courseName || !description || !WhatYouWillLearn || !price || !tag || !thumbnail || !category) {
             return res.status(400).json({
                 status: 'fail',
                 message: 'Enter all the fields'
@@ -23,25 +25,29 @@ exports.createCourse = async (req, res) => {
         }
 
         //* Validate if the instructor is from the valid user or not list or not 
-        const userId = req.user.id;
-        const instructorDeatils = await userModel.findById(userId);
+        const instructorDeatils = await userModel.findById(userId, {
+            accountType: "Instructor"
+        });
         //TODO: Verify that userId and instructorDetails._id are same or different? -> WE are getting the same user id and then checking where that user id as instructor id is same or not. Which is not required. As both the id's are same.
 
+        if (!status || status === undefined) {
+            status = "Draft";
+        }
         // console.log('Instructor Details: ', instructorDeatils)
 
-        // if (!instructorDeatils) {
-        //     return res.status(404).json({
-        //         status: 'fail',
-        //         message: 'Instructor details not found!'
-        //     })
-        // }
-
-        //* Check given tag is valid or not
-        const tagDetails = await tagModel.findOne({ _id: tag });
-        if (!tagDetails) {
+        if (!instructorDeatils) {
             return res.status(404).json({
                 status: 'fail',
-                message: 'Tag details not found!'
+                message: 'Instructor details not found!'
+            })
+        }
+
+        //* Check given tag is valid or not
+        const categoryDetails = await categoryModel.findOne(category);
+        if (!categoryDetails) {
+            return res.status(404).json({
+                status: 'fail',
+                message: 'Category details not found!'
             })
         }
 
@@ -55,8 +61,10 @@ exports.createCourse = async (req, res) => {
             instructor: instructorDeatils._id,
             WhatYouWillLearn,
             price,
-            tag: tagDetails._id,
-            thumbnail: thumbnailImage.secure_url
+            category: categoryDetails._id,
+            thumbnail: thumbnailImage.secure_url,
+            status: status,
+            instrcutions: instrcutions
         })
 
         //* Add the new course to the user schema of instructor
@@ -66,9 +74,9 @@ exports.createCourse = async (req, res) => {
             { new: true }
         )
 
-        //* Update the tag schema
-        await tagModel.findByIdAndUpdate(
-            { _id: tagDetails._id },
+        //* Update the Category schema
+        await categoryModel.findByIdAndUpdate(
+            { _id: category },
             { $push: { course: newCourse._id } },
             { new: true }
         )
@@ -93,44 +101,27 @@ exports.createCourse = async (req, res) => {
 exports.getAllCourses = async (req, res) => {
     try {
 
-        const courses = await courseModel.find({}, {
-            courseName: true,
-            price: true,
-            thumbnail: true,
-            instructor: true,
-            ratingAndReviews: true,
-            studentEnrolled: true
-        })
+        const courses = await courseModel.find(
+            {},
+            {
+                courseName: true,
+                price: true,
+                thumbnail: true,
+                instructor: true,
+                ratingAndReviews: true,
+                studentEnrolled: true
+            })
             .populate({
                 path: 'instructor',
-                populate: {
-                    path: 'additionalDetails'
-                }
-            })
-            .populate('tag')
-            .populate('ratingAndReviews')
-            .populate({
-                path: 'courseContent',
-                populate: {
-                    path: 'subSection'
-                }
             })
             .exec()
-        
-        if(!courses){
+
+        if (!courses) {
             return res.status(404).json({
                 status: 'fail',
                 message: 'Course not found!'
             })
         }
-
-        //* CourseDetails validation
-        // if (!courses) {
-        //     res.status(404).json({
-        //         status: 'fail',
-        //         message: `Could not find the course details with `,
-        //     })
-        // }
 
         //* Return response 
         res.status(200).json({
@@ -149,29 +140,21 @@ exports.getAllCourses = async (req, res) => {
 }
 
 // Get a single course handle function
-exports.getCourse = async (req, res) => {
+exports.getCourseDetails = async (req, res) => {
     try {
-        console.log('REQ.USER ', req.user)
         const courseId = req.body.courseId;
 
-        if(!courseId){
+        if (!courseId) {
             return res.status(404).send("Course Id is missing!")
         }
-        const course = await courseModel.findById(courseId, {
-            courseName: true,
-            price: true,
-            thumbnail: true,
-            instructor: true,
-            ratingAndReviews: true,
-            studentEnrolled: true
-        })
+        const course = await courseModel.findById(courseId)
             .populate({
                 path: 'instructor',
                 populate: {
                     path: 'additionalDetails'
                 }
             })
-            .populate('tag')
+            .populate('category')
             .populate('ratingAndReviews')
             .populate({
                 path: 'courseContent',
@@ -180,26 +163,17 @@ exports.getCourse = async (req, res) => {
                 }
             })
             .exec()
-        
-        if(!course){
+
+        if (!course) {
             return res.status(404).json({
                 status: 'fail',
                 message: 'Course not found!'
             })
         }
 
-        //* CourseDetails validation
-        // if (!courses) {
-        //     res.status(404).json({
-        //         status: 'fail',
-        //         message: `Could not find the course details with `,
-        //     })
-        // }
-
         //* Return response 
         res.status(200).json({
             status: 'success',
-            // results: course.length,
             course
         })
     }

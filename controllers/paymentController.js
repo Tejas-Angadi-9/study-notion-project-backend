@@ -1,5 +1,5 @@
 //* Call the instance from the razorpay.js file inside config folder
-const { instance } = require('../config/razorpay')
+const instance = require('../config/razorpay')
 const courseModel = require('../models/courseModel');
 const userModel = require('../models/userModel')
 const { mailSender } = require('../utils/mailSender')
@@ -14,31 +14,40 @@ exports.capturePayment = async (req, res) => {
         const courseId = req.body.courseId;
         const userId = req.user.id;
         //* Validate these details
-        if (!courseId || !userId) {
+        if (!courseId) {
             return res.status(400).json({
                 status: 'fail',
                 message: 'Please provide course ID'
             })
         }
-        //* Check is the courseId is valid or not
-        const courseDetail = await courseModel.findById(courseId);
-        //* Validate the courseDetail
-        if (!courseDetail) {
-            return res.status(404).json({
-                status: 'fail',
-                message: 'Course not found!'
-            })
-        }
-        //* Check if the user has already paid for the same course
-        //! Now we will check from the enrolledStudents as it has objectId and the userId is in string, we need to convert it to objectId
-        const uid = mongoose.Types.ObjectId(userId);
-        if (courseDetail.studentEnrolled.includes(uid)) {
-            return res.status(204).json({
-                status: 'fail',
-                message: 'Student is already enrolled.'
-            })
-        }
 
+        let courseDetail;
+        try {
+            //* Check is the courseId is valid or not
+            courseDetail = await courseModel.findById(courseId);
+            //* Validate the courseDetail
+            if (!courseDetail) {
+                return res.status(404).json({
+                    status: 'fail',
+                    message: 'Course not found!'
+                })
+            }
+            //* Check if the user has already paid for the same course
+            //! Now we will check from the enrolledStudents as it has objectId and the userId is in string, we need to convert it to objectId
+            const uid = new mongoose.Types.ObjectId(userId);
+            if (courseDetail.studentEnrolled.includes(uid)) {
+                return res.status(204).json({
+                    status: 'fail',
+                    message: 'Student is already enrolled.'
+                })
+            }
+        }
+        catch (err) {
+            return res.status(500).json({
+                success: false,
+                message: error.message,
+            });
+        }
         //* Create order
         const amount = courseDetail.price;
         const currency = "INR";
@@ -49,7 +58,7 @@ exports.capturePayment = async (req, res) => {
             receipt: Math.random(Date.now()).toString(),
             notes: {
                 courseId: courseId,
-                user Id: userId
+                userId
             }
         }
 
@@ -57,6 +66,17 @@ exports.capturePayment = async (req, res) => {
             //* Initiate the payment using razorpay
             const paymentResponse = instance.orders.create(options);
             console.log("Payment Response: ", paymentResponse)
+            //* Send response
+            return res.status(201).json({
+                status: 'success',
+                courseName: courseDetail.courseName,
+                courseDescription: courseDetail.description,
+                thumbnail: courseDetail.thumbnail,
+                orderId: paymentResponse.id,
+                currency: paymentResponse.currency,
+                amount: paymentResponse.amount,
+                message: 'Order created successfully!'
+            })
         }
         catch (err) {
             return res.status(500).json({
@@ -66,17 +86,7 @@ exports.capturePayment = async (req, res) => {
             })
         }
 
-        //* Send response
-        return res.status(201).json({
-            status: 'success',
-            courseName: courseDetail.courseName,
-            courseDescription: courseDetail.description,
-            thumbnail: courseDetail.thumbnail,
-            orderId: paymentResponse.id,
-            currency: paymentResponse.currency,
-            amount: paymentResponse.amount,
-            message: 'Order created successfully!'
-        })
+
     }
     catch (err) {
         return res.status(500).json({

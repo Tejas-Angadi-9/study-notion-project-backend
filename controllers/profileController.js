@@ -1,5 +1,6 @@
 const profileModel = require('../models/profileModel')
-const userModel = require('../models/userModel')
+const userModel = require('../models/userModel');
+const { uploadImageToCloudinary } = require('../utils/imageUploader');
 
 //* Update profile
 exports.updateProfile = async (req, res) => {
@@ -72,12 +73,22 @@ exports.deleteAccount = async (req, res) => {
     }
 }
 
+//* Get all user Details
+exports.getAllUserDetails = async (req, res) => {
+    try {
+
+    }
+    catch (err) {
+
+    }
+}
+
 //* Get all the user accounts
-exports.getUser = async (req, res) => {
+exports.getAllUserDetails = async (req, res) => {
     try {
         const id = req.user.id;
 
-        const userData = await userModel.findById(id, { password: false, token_link: false, resetPasswordExpires: false, __v: false }).populate('additionalDetails').exec();
+        const userData = await userModel.findById(id).populate('additionalDetails').exec();
 
         res.status(200).json({
             status: 'success',
@@ -89,6 +100,69 @@ exports.getUser = async (req, res) => {
             status: 'fail',
             data: 'Failed to get the user details',
             message: err.message
+        })
+    }
+}
+
+//* Update the display picture of the user
+exports.updateDisplayPicture = async (req, res) => {
+    try {
+        const displayPic = req.files.displayPicture;
+        const userId = req.user.id;
+        const image = await uploadImageToCloudinary(
+            displayPic,
+            process.env.FOLDER_NAME,
+            1000,
+            1000
+        )
+        console.log("Display Pic: ", image)
+
+        //* Update the profile
+        const updatedProfile = await profileModel.findByIdAndUpdate(
+            { _id: userId },
+            { image: image.secure_url },
+            { new: true }
+        )
+
+        return res.status(201).json({
+            status: 'success',
+            message: 'Image updated successfully!',
+            profile: updateProfile,
+        })
+    }
+    catch (err) {
+        return res.status(500).json({
+            success: false,
+            data: 'Failed to update the profile picture',
+            message: err.message,
+        })
+    }
+}
+
+
+//* Get enrolled courses
+exports.getEnrolledCourses = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const userDetails = await userModel.findOne({ _id: userId }).populate('courses').exec();
+
+        if (!userDetails) {
+            return res.status(404).json({
+                status: 'fail',
+                message: 'User not found!'
+            })
+        }
+
+        return res.status(200).json({
+            status: 'success',
+            data: userDetails.courses,
+        })
+    }
+    catch (err) {
+        return res.status(500).json({
+            status: 'fail',
+            data: 'Failed to get the enrolled courses of the user',
+            message: err.message,
         })
     }
 }

@@ -3,9 +3,11 @@ const mongoose = require('mongoose');
 const otpSchema = new mongoose.Schema({
     email: {
         type: String,
+        requird: true
     },
     otp: {
-        type: String
+        type: String,
+        requird: true
     },
     createdAt: {
         type: Date,

@@ -2,7 +2,7 @@ const { default: mongoose } = require("mongoose");
 const courseModel = require("../models/courseModel");
 const ratingAndReviewsModel = require("../models/ratingAndReviewsModel");
 
-exports.createRatingAndReview = async (req, res) => {
+exports.createRating = async (req, res) => {
     try {
         const userId = req.user.id;
 
@@ -18,9 +18,9 @@ exports.createRatingAndReview = async (req, res) => {
         }
 
         //* Check whether the user is enrolled or not
-        const courseDetails = await courseModel.findOne({_id: courseId, studentEnrolled: {$elemMatch: {$eq: userId}}});
+        const courseDetails = await courseModel.findOne({ _id: courseId, studentEnrolled: { $elemMatch: { $eq: userId } } });
 
-        if(!courseDetails){
+        if (!courseDetails) {
             return res.status(404).json({
                 status: 'fail',
                 message: 'Student is not enrolled in the course'
@@ -36,8 +36,8 @@ exports.createRatingAndReview = async (req, res) => {
         }
 
         //* Check if the user is already reviewed the course or not
-        const alreadyReviewed = await ratingAndReviewsModel.findOne({user: userId, course: courseId})
-        if(alreadyReviewed){
+        const alreadyReviewed = await ratingAndReviewsModel.findOne({ user: userId, course: courseId })
+        if (alreadyReviewed) {
             return res.status(403).json({
                 status: 'success',
                 message: 'Course is already reviewed'
@@ -109,7 +109,53 @@ exports.updateRatingAndReview = async (req, res) => {
     }
 }
 
-//TODO: Write the controller to get the average of the ratings
+exports.getAverageRating = async (req, res) => {
+    try {
+        //* Get the course id
+        const courseId = req.body.courseId;
+
+        if (!courseId) {
+            return res.status(400).send('Course Id is missing')
+        }
+        //* calculate average rating
+        //! SYNTAX -> Check the aggregate in mongoose or google or Chat GPT
+        const result = await ratingAndReviewsModel.aggregate([
+            //* The [] is important when we are using the aggregate and the $match matches all the courses based on courseId
+            {
+                $match: {
+                    course: mongoose.Types.ObjectId(courseId)
+                }
+            },
+            //* The matches courses are then grouped as we want to group all the matched docs togethter we can set _id to null and find the averageRating of the rating with $avg on $rating
+            {
+                $group: {
+                    _id: null,
+                    averageRating: { $avg: "$rating" }
+                }
+            }
+        ])
+        //* Return rating
+        if (result.length > 0) {
+            return res.status(200).json({
+                success: true,
+                averageRating: result[0].averageRating
+            })
+        }
+
+        //* If no rating exists
+        return res.status(404).json({
+            status: 'success',
+            message: 'Average rating is 0, no ratings given till now'
+        })
+    }
+    catch (err) {
+        res.status(500).json({
+            status: 'fail',
+            data: 'Failed to get all the average ratings and reviews',
+            message: err.message
+        })
+    }
+}
 
 //* Get the rating & Reviews based on single course id
 exports.getRatingBasedonCourse = async (req, res) => {
@@ -155,17 +201,17 @@ exports.getRatingBasedonCourse = async (req, res) => {
 }
 
 //* Get all the ratings and reviews -> To show on the dashboard/main screen
-exports.getAllRatings = async(req, res) => {
-    try{
+exports.getAllRating = async (req, res) => {
+    try {
         const ratings = await ratingAndReviewsModel.find()
             .populate({
                 path: 'user',
                 select: 'firstName lastName'
             })
             .exec()
-        ;
+            ;
 
-        if(!ratings){
+        if (!ratings) {
             return res.status(404).send('No ratings found!')
         }
 
@@ -175,7 +221,7 @@ exports.getAllRatings = async(req, res) => {
             ratings
         })
     }
-    catch(err){
+    catch (err) {
         res.status(500).json({
             status: 'fail',
             data: 'Failed to fetch all the ratings and reviews',
